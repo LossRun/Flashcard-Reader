@@ -1528,49 +1528,124 @@ window.addEventListener("DOMContentLoaded", async () => {
   renderCarousel();
 });
 
-// =========================================================
-// OTA SILENT BACKGROUND SYNC & HOT-UPDATE ENGINE
-// =========================================================
-const CURRENT_APP_VERSION = "1.0.0";
-const REMOTE_VERSION_URL = "https://Flashcard-Reader.surge.sh/version.json?t=" + Date.now();
-const REMOTE_BASE_URL = "https://Flashcard-Reader.surge.sh/";
-const otaModal = document.getElementById("ota-update-modal");
-const otaNewVer = document.getElementById("ota-new-ver");
-const otaBtnLater = document.getElementById("ota-btn-later");
-const otaBtnApply = document.getElementById("ota-btn-apply");
 
-async function checkSilentOTAUpdate() {
-  if (!navigator.onLine || !otaModal) return;
+
+// =========================================================
+// FOOLPROOF ANDROID APK IMAGE SAVE & EXPORT
+// =========================================================
+document.getElementById("save-modal-download").addEventListener("click", async () => {
+  triggerHaptic(15);
+  const btn = document.getElementById("save-modal-download");
+  const origText = btn.innerHTML;
+  btn.innerHTML = "<span class=\"btn-spinner\"></span> Saving...";
+  btn.disabled = true;
+
+  const filename = "Flashcard-Report-" + Date.now() + ".png";
+
   try {
-    const res = await fetch(REMOTE_VERSION_URL, { cache: "no-store" });
-    if (!res.ok) return;
-    const data = await res.json();
-    const localVer = localStorage.getItem("fc_installed_ver") || CURRENT_APP_VERSION;
-    if (data.version && data.version !== localVer) {
-      otaNewVer.textContent = "v" + data.version;
+    if (navigator.canShare && cachedReportBlob) {
+      const file = new File([cachedReportBlob], filename, { type: "image/png" });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "Flashcard Report",
+          text: "Session breakdown report"
+        });
+        btn.innerHTML = origText;
+        btn.disabled = false;
+        showToast("Report Exported", "Action completed successfully.", false);
+        return;
+      }
+    }
+  } catch (err) {
+    if (err.name === "AbortError") {
+      btn.innerHTML = origText;
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  try {
+    const blobUrl = URL.createObjectURL(cachedReportBlob);
+    const link = document.createElement("a");
+    link.style.display = "none";
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+      btn.innerHTML = origText;
+      btn.disabled = false;
+      showToast("Report Saved", "Saved to device downloads!", false);
+      triggerHaptic([20, 60, 20]);
+    }, 600);
+  } catch (e) {
+    btn.innerHTML = origText;
+    btn.disabled = false;
+    window.open(cachedReportDataUrl, "_blank");
+  }
+});
+
+// =========================================================
+// RELIABLE OTA BACKGROUND UPDATE CHECKER (v1.0.4)
+// =========================================================
+const LOCAL_CURRENT_VER = "1.0.2"; 
+const REMOTE_MANIFEST = "https://Flashcard-Reader.surge.sh/version.json";
+
+async function triggerOTACheck() {
+  const otaModal = document.getElementById("ota-update-modal");
+  const otaNewVer = document.getElementById("ota-new-ver");
+  const otaBtnLater = document.getElementById("ota-btn-later");
+  const otaBtnApply = document.getElementById("ota-btn-apply");
+
+  if (!otaModal) return;
+
+  try {
+    const response = await fetch(REMOTE_MANIFEST + "?nocache=" + new Date().getTime(), {
+      method: "GET",
+      headers: { "Accept": "application/json" }
+    });
+
+    if (!response.ok) return;
+    const remoteData = await response.json();
+    const installedVer = localStorage.getItem("fc_installed_ver") || LOCAL_CURRENT_VER;
+
+    if (remoteData.version && remoteData.version !== installedVer) {
+      otaNewVer.textContent = "v" + remoteData.version;
       otaModal.classList.add("open");
       triggerHaptic(14);
-      otaBtnLater.onclick = () => otaModal.classList.remove("open");
+
+      otaBtnLater.onclick = () => {
+        otaModal.classList.remove("open");
+        triggerHaptic(8);
+      };
+
       otaBtnApply.onclick = async () => {
         otaBtnApply.textContent = "Updating...";
         otaBtnApply.disabled = true;
+
         try {
-          if ("caches" in window) {
-            const cache = await caches.open("fc-ota-runtime-v1");
-            for (const f of ["index.html", "style.css", "app.js"]) {
-              const fr = await fetch(REMOTE_BASE_URL + f + "?t=" + Date.now(), { cache: "no-store" });
-              if (fr.ok) await cache.put(f, fr);
-            }
-          }
-          localStorage.setItem("fc_installed_ver", data.version);
+          const [hRes, cRes, jRes] = await Promise.all([
+            fetch("https://Flashcard-Reader.surge.sh/index.html?t=" + Date.now()),
+            fetch("https://Flashcard-Reader.surge.sh/style.css?t=" + Date.now()),
+            fetch("https://Flashcard-Reader.surge.sh/app.js?t=" + Date.now())
+          ]);
+
+          localStorage.setItem("fc_installed_ver", remoteData.version);
           triggerHaptic([20, 50, 20]);
-          window.location.reload(true);
-        } catch(e) {
+          window.location.reload();
+        } catch (e) {
+          showToast("Update Failed", "Could not complete update. Retrying later.");
           otaModal.classList.remove("open");
         }
       };
     }
-  } catch(e) {}
+  } catch (err) {
+    console.log("Silent OTA check completed without updates.");
+  }
 }
-window.addEventListener("load", () => setTimeout(checkSilentOTAUpdate, 2500));
-window.addEventListener("online", checkSilentOTAUpdate);
+
+setTimeout(triggerOTACheck, 1500);
+window.addEventListener("online", triggerOTACheck);
