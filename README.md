@@ -101,4 +101,6 @@ FLASHCARD-READER/
 ├── index.html                    # Main application markup, views & modal templates
 ├── LICENSE                       # Open-source MIT license agreement
 ├── README.md                     # Project documentation
-└── style.css                     # Design system, glassmorphism, 3D transforms & themes
+ style.css                     # Design system, glassmorphism, 3D transforms & themes
+
+└── version.json
