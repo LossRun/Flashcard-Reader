@@ -1278,46 +1278,75 @@ document.getElementById("save-modal-close").addEventListener("click", () => {
 document.getElementById("save-modal-download").addEventListener("click", async () => {
   triggerHaptic(15);
   if (!cachedReportBlob && !cachedReportDataUrl) return;
+
+  const btn = document.getElementById("save-modal-download");
+  const origBtnText = btn.innerHTML;
+  btn.innerHTML = "<span class=\"btn-spinner\"></span> Saving...";
+  btn.disabled = true;
+
   const filename = "Flashcard-Report-" + Date.now() + ".png";
 
-  // 1. Android Native System Share / Save Dialog (Native APK + Mobile Browser)
+  // 1. Cordova Native FileSystem writing to Pictures directory (Verified Write)
+  if (window.cordova && window.resolveLocalFileSystemURL && cachedReportBlob) {
+    try {
+      const storageBase = cordova.file.externalRootDirectory ? (cordova.file.externalRootDirectory + "Pictures/") : (cordova.file.dataDirectory || cordova.file.externalDataDirectory);
+      window.resolveLocalFileSystemURL(storageBase, (dirEntry) => {
+        dirEntry.getFile(filename, { create: true, exclusive: false }, (fileEntry) => {
+          fileEntry.createWriter((fileWriter) => {
+            fileWriter.onwriteend = () => {
+              btn.innerHTML = origBtnText;
+              btn.disabled = false;
+              if (window.cordova.plugins && window.cordova.plugins.MediaScannerPlugin) {
+                window.cordova.plugins.MediaScannerPlugin.scanFile(fileEntry.nativeURL);
+              }
+              showToast("Report Saved", "Verified: Saved to Pictures folder!", false);
+              triggerHaptic([20, 60, 20]);
+            };
+            fileWriter.onerror = (e) => {
+              btn.innerHTML = origBtnText;
+              btn.disabled = false;
+              showToast("Storage Error", "Could not write image to device storage.");
+            };
+            fileWriter.write(cachedReportBlob);
+          });
+        }, (err) => {
+          btn.innerHTML = origBtnText;
+          btn.disabled = false;
+          showToast("File Error", "Could not create target image file.");
+        });
+      }, (err) => {
+        btn.innerHTML = origBtnText;
+        btn.disabled = false;
+        showToast("Access Error", "Pictures directory not accessible.");
+      });
+      return;
+    } catch (err) {
+      console.warn("Cordova File API issue, falling back to Web Share / Download:", err);
+    }
+  }
+
+  // 2. Android Native Web Share API (System Save / Drive / Photos)
   if (navigator.canShare && cachedReportBlob) {
     try {
       const file = new File([cachedReportBlob], filename, { type: "image/png" });
       if (navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: "Session Report",
-          text: "Flashcard Study Report"
+          title: "Flashcard Study Report",
+          text: "My Flashcards Study Report"
         });
-        showToast("Report Saved", "Shared or saved successfully!", false);
+        btn.innerHTML = origBtnText;
+        btn.disabled = false;
+        showToast("Report Shared", "Action completed successfully.", false);
         return;
       }
     } catch (err) {
-      if (err.name !== "AbortError") {
-        console.warn("Share failed, falling back to download:", err);
-      } else {
+      if (err.name === "AbortError") {
+        btn.innerHTML = origBtnText;
+        btn.disabled = false;
         return;
       }
     }
-  }
-
-  // 2. Cordova Native FileSystem Plugin (if packaged with cordova-plugin-file)
-  if (window.cordova && window.resolveLocalFileSystemURL && cachedReportBlob) {
-    try {
-      const targetDir = cordova.file.externalRootDirectory || cordova.file.dataDirectory;
-      window.resolveLocalFileSystemURL(targetDir, (dirEntry) => {
-        dirEntry.getFile(filename, { create: true, exclusive: false }, (fileEntry) => {
-          fileEntry.createWriter((fileWriter) => {
-            fileWriter.onwriteend = () => {
-              showToast("Report Saved", "Saved to device storage!", false);
-            };
-            fileWriter.write(cachedReportBlob);
-          });
-        });
-      });
-      return;
-    } catch (e) {}
   }
 
   // 3. Web Anchor Download Fallback
@@ -1327,10 +1356,15 @@ document.getElementById("save-modal-download").addEventListener("click", async (
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => document.body.removeChild(a), 400);
-    showToast("Downloaded", "Image downloaded to device.", false);
-  } catch (e) {
-    // 4. Ultimate Fallback: Open raw base64 so user can long-press to save
+    setTimeout(() => {
+      document.body.removeChild(a);
+      btn.innerHTML = origBtnText;
+      btn.disabled = false;
+      showToast("Report Downloaded", "Downloaded to your browser files.", false);
+    }, 500);
+  } catch (err) {
+    btn.innerHTML = origBtnText;
+    btn.disabled = false;
     window.open(cachedReportDataUrl, "_blank");
   }
 });
