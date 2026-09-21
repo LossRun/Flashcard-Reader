@@ -287,7 +287,7 @@ let pendingDeleteDeckId = null;
 let editingDeckId = null;
 
 // =========================================================
-// UNIVERSAL BACKDROP & ROBUST DRAG-TO-MINIMIZE HANDLING
+// UNIVERSAL BACKDROP & DRAG-TO-MINIMIZE HANDLING
 // =========================================================
 document.querySelectorAll(".modal-overlay, .save-modal-backdrop").forEach(overlay => {
   overlay.addEventListener("click", (e) => {
@@ -298,7 +298,6 @@ document.querySelectorAll(".modal-overlay, .save-modal-backdrop").forEach(overla
   });
 });
 
-// Robust Sheet Drag-to-Dismiss Feature (Grabbable handle and header area)
 document.querySelectorAll(".settings-sheet").forEach(sheet => {
   const handle = sheet.querySelector(".sheet-handle") || sheet.querySelector(".sheet-head");
   if (!handle) return;
@@ -342,7 +341,6 @@ document.querySelectorAll(".settings-sheet").forEach(sheet => {
   window.addEventListener("mouseup", () => { if (isDragging) endDrag(); });
 });
 
-// Info Modal Handling
 if (openInfoModal) {
   openInfoModal.addEventListener("click", () => {
     document.getElementById("prefs-modal").classList.remove("open");
@@ -358,7 +356,7 @@ if (closeInfo) {
 }
 
 // =========================================================
-// 1:1 CYLINDRICAL CAROUSEL (310PX SPACING FOR PEEK EFFECT)
+// 3D CYLINDRICAL CAROUSEL (PEEK PREVIEW)
 // =========================================================
 let carouselOffset = 0;
 let carouselStartOffset = 0;
@@ -1119,7 +1117,9 @@ cardScene.addEventListener("mousedown", (e) => gestureStart(e.clientX, e.clientY
 window.addEventListener("mousemove", (e) => { if (isTrackingCard) gestureMove(e.clientX, e.clientY); });
 window.addEventListener("mouseup", () => { if (isTrackingCard) gestureEnd(); });
 
-// High-Resolution Report Generator
+// =========================================================
+// HIGH-RESOLUTION LIGHT THEME STUDIO REPORT GENERATOR
+// =========================================================
 function generateReportImage() {
   triggerHaptic(15);
   const btn = btnExportImage;
@@ -1147,99 +1147,116 @@ function generateReportImage() {
     rCtx.closePath();
   }
 
-  rCtx.fillStyle = "#07090e";
+  // Pure Studio Light Palette
+  rCtx.fillStyle = "#f1f5f9";
+  rCtx.fillRect(0, 0, 1080, 1350);
+
+  // Soft Ambient Glow Behind Main Card
+  const glow = rCtx.createRadialGradient(540, 600, 100, 540, 600, 550);
+  glow.addColorStop(0, "rgba(56, 189, 248, 0.08)");
+  glow.addColorStop(1, "rgba(241, 245, 249, 0)");
+  rCtx.fillStyle = glow;
   rCtx.fillRect(0, 0, 1080, 1350);
 
   const cardX = 70, cardY = 60, cardW = 940, cardH = 1230;
 
+  // Crisp Off-White Surface Card
   rCtx.save();
-  roundRect(cardX, cardY, cardW, cardH, 48);
-  rCtx.fillStyle = "#0f131c";
-  rCtx.shadowColor = "rgba(0, 0, 0, 0.7)";
-  rCtx.shadowBlur = 60;
-  rCtx.shadowOffsetY = 28;
+  roundRect(cardX, cardY, cardW, cardH, 52);
+  rCtx.fillStyle = "#ffffff";
+  rCtx.shadowColor = "rgba(15, 23, 42, 0.08)";
+  rCtx.shadowBlur = 50;
+  rCtx.shadowOffsetY = 20;
   rCtx.fill();
-  rCtx.lineWidth = 1.5;
-  rCtx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+  rCtx.lineWidth = 2;
+  rCtx.strokeStyle = "#e2e8f0";
   rCtx.stroke();
   rCtx.restore();
 
+  // Header Title
   rCtx.textAlign = "center";
-  rCtx.fillStyle = "#f8fafc";
+  rCtx.fillStyle = "#0f172a";
   rCtx.font = "700 64px sans-serif";
-  rCtx.fillText("Session Complete", 540, 210);
+  rCtx.fillText("Session Complete", 540, 215);
 
-  rCtx.fillStyle = "#8590a2";
-  rCtx.font = "600 18px sans-serif";
-  rCtx.fillText("PERFORMANCE BREAKDOWN", 540, 275);
+  rCtx.fillStyle = "#64748b";
+  rCtx.font = "600 20px sans-serif";
+  rCtx.letterSpacing = "3px";
+  rCtx.fillText("PERFORMANCE BREAKDOWN", 540, 280);
 
+  // Circular Score Gauge
   const cx = 540, cy = 540, cr = 180;
   rCtx.beginPath();
   rCtx.arc(cx, cy, cr, 0, 2 * Math.PI);
-  rCtx.lineWidth = 16;
-  rCtx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+  rCtx.lineWidth = 18;
+  rCtx.strokeStyle = "#f1f5f9";
   rCtx.stroke();
 
   const startAngle = -Math.PI / 2;
   const endAngle = startAngle + (2 * Math.PI * (masteryPct / 100));
-  const gaugeColor = masteryPct >= 50 ? "#4ade80" : "#f87171";
+  const gaugeColor = masteryPct >= 50 ? "#10b981" : "#ef4444";
 
   rCtx.save();
   rCtx.beginPath();
   rCtx.arc(cx, cy, cr, startAngle, endAngle);
-  rCtx.lineWidth = 16;
+  rCtx.lineWidth = 18;
   rCtx.lineCap = "round";
   rCtx.strokeStyle = gaugeColor;
   rCtx.stroke();
   rCtx.restore();
 
-  rCtx.fillStyle = "#f8fafc";
-  rCtx.font = "700 80px monospace";
-  rCtx.fillText(`${masteryPct}%`, cx, cy + 14);
+  rCtx.fillStyle = "#0f172a";
+  rCtx.font = "800 84px monospace";
+  rCtx.fillText(`${masteryPct}%`, cx, cy + 18);
 
-  rCtx.fillStyle = "#8590a2";
+  rCtx.fillStyle = "#64748b";
   rCtx.font = "600 26px monospace";
-  rCtx.fillText(`${rights} / ${total}`, cx, cy + 72);
+  rCtx.fillText(`${rights} / ${total}`, cx, cy + 76);
 
+  // Mastered & Needs Work Stat Boxes
   const boxY = 820, boxW = 380, boxH = 210;
+  
+  // Mastered Box (Soft Mint Fill)
   roundRect(110, boxY, boxW, boxH, 28);
-  rCtx.fillStyle = "rgba(255, 255, 255, 0.02)";
+  rCtx.fillStyle = "rgba(16, 185, 129, 0.06)";
   rCtx.fill();
-  rCtx.strokeStyle = "rgba(34, 197, 94, 0.3)";
+  rCtx.strokeStyle = "rgba(16, 185, 129, 0.25)";
   rCtx.lineWidth = 1.5;
   rCtx.stroke();
 
-  rCtx.fillStyle = "#4ade80";
-  rCtx.font = "700 18px sans-serif";
+  rCtx.fillStyle = "#059669";
+  rCtx.font = "700 20px sans-serif";
   rCtx.fillText("MASTERED", 110 + boxW / 2, boxY + 58);
-  rCtx.font = "700 78px monospace";
+  rCtx.font = "800 76px monospace";
   rCtx.fillText(rights, 110 + boxW / 2, boxY + 155);
 
+  // Needs Work Box (Soft Coral Fill)
   roundRect(590, boxY, boxW, boxH, 28);
   rCtx.fillStyle = "rgba(239, 68, 68, 0.06)";
   rCtx.fill();
-  rCtx.strokeStyle = "rgba(239, 68, 68, 0.3)";
+  rCtx.strokeStyle = "rgba(239, 68, 68, 0.25)";
   rCtx.lineWidth = 1.5;
   rCtx.stroke();
 
-  rCtx.fillStyle = "#f87171";
-  rCtx.font = "700 18px sans-serif";
+  rCtx.fillStyle = "#dc2626";
+  rCtx.font = "700 20px sans-serif";
   rCtx.fillText("NEEDS WORK", 590 + boxW / 2, boxY + 58);
-  rCtx.font = "700 78px monospace";
+  rCtx.font = "800 76px monospace";
   rCtx.fillText(wrongs, 590 + boxW / 2, boxY + 155);
 
+  // Footer Timestamp
   const now = new Date();
   const dateStr = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
-  rCtx.fillStyle = "#64748b";
+  rCtx.fillStyle = "#94a3b8";
   rCtx.font = "500 20px sans-serif";
   rCtx.fillText(`Completed on ${dateStr} • ${timeStr}`, 540, 1160);
 
   requestAnimationFrame(() => {
     c.toBlob((blob) => {
       cachedReportBlob = blob;
-      cachedReportDataUrl = URL.createObjectURL(blob);
+      cachedReportDataUrl = c.toDataURL("image/png");
       document.getElementById("save-modal-img").src = cachedReportDataUrl;
       
       btn.innerHTML = originalHTML;
@@ -1255,31 +1272,70 @@ document.getElementById("save-modal-close").addEventListener("click", () => {
   document.getElementById("save-modal-backdrop").classList.remove("open");
 });
 
+// =========================================================
+// UNIVERSAL SAVE & DOWNLOAD (APK WEBVIEW + DESKTOP/MOBILE)
+// =========================================================
 document.getElementById("save-modal-download").addEventListener("click", async () => {
   triggerHaptic(15);
-  if (!cachedReportBlob) return;
+  if (!cachedReportDataUrl && !cachedReportBlob) return;
   const filename = `Flashcard-Report-${Date.now()}.png`;
 
-  if (navigator.canShare) {
+  // 1. Android/iOS Native Web Share API (Works in modern mobile browsers and WebView)
+  if (navigator.canShare && cachedReportBlob) {
     try {
       const file = new File([cachedReportBlob], filename, { type: "image/png" });
       if (navigator.canShare({ files: [file] })) {
-        await navigator.share({ title: "Session Report", files: [file] });
+        await navigator.share({
+          title: "Session Report",
+          text: "My Flashcards Study Session Report",
+          files: [file]
+        });
         return;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log("Share failed, falling back to download...", e);
+    }
   }
 
-  const url = URL.createObjectURL(cachedReportBlob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 300);
+  // 2. Cordova / PhoneGap Native File System APK Support
+  if (window.cordova && window.resolveLocalFileSystemURL && cachedReportBlob) {
+    try {
+      const storageLocation = cordova.file.externalRootDirectory || cordova.file.dataDirectory;
+      window.resolveLocalFileSystemURL(storageLocation, (dirEntry) => {
+        dirEntry.getFile(filename, { create: true, exclusive: false }, (fileEntry) => {
+          fileEntry.createWriter((fileWriter) => {
+            fileWriter.onwriteend = () => {
+              showToast("Report Saved", "Saved report to device storage!", false);
+              if (window.cordova.plugins && window.cordova.plugins.MediaScannerPlugin) {
+                window.cordova.plugins.MediaScannerPlugin.scanFile(fileEntry.nativeURL);
+              }
+            };
+            fileWriter.onerror = (err) => {
+              showToast("Save Error", "Could not write image to local storage.");
+            };
+            fileWriter.write(cachedReportBlob);
+          });
+        });
+      });
+      return;
+    } catch (err) {
+      console.error("Cordova File API fallback triggered:", err);
+    }
+  }
+
+  // 3. Fallback standard Anchor Data-URL Click
+  try {
+    const a = document.createElement("a");
+    a.href = cachedReportDataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); }, 300);
+    showToast("Report Downloaded", "Image saved to downloads.", false);
+  } catch (err) {
+    // 4. Ultimate Fallback: Open in new tab/window for manual long-press save
+    window.open(cachedReportDataUrl, "_blank");
+  }
 });
 
 // RESTORED PREFERENCES & AMBIENT ENGINE CONTROLS

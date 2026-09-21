@@ -1,13 +1,14 @@
 :root {
-  --bg: #090c12;
-  --surface: #111622;
-  --surface-subtle: #192030;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(255, 255, 255, 0.22);
+  /* Ultra-Premium Obsidian Titanium Palette (Non-AI Dark Theme) */
+  --bg: #07090e;
+  --surface: #0f141f;
+  --surface-subtle: #171e2e;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-focus: rgba(255, 255, 255, 0.24);
 
   --text: #f8fafc;
-  --text-muted: #8590a2;
-  --text-dim: #3f4756;
+  --text-muted: #94a3b8;
+  --text-dim: #475569;
 
   --font-micro: 0.75rem;
   --font-base: 0.9rem;
@@ -16,13 +17,13 @@
 
   --card-radius: 34px;
   --flip-speed: 0.48s;
-  --soft-shadow: 0 30px 75px -14px rgba(0, 0, 0, 0.85);
+  --soft-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9);
 
-  --green-glow: rgba(34, 197, 94, 0.12);
-  --green-border: rgba(34, 197, 94, 0.28);
-  --green-text: #4ade80;
-  --coral-glow: rgba(239, 68, 68, 0.12);
-  --coral-border: rgba(239, 68, 68, 0.28);
+  --green-glow: rgba(34, 197, 94, 0.14);
+  --green-border: rgba(34, 197, 94, 0.32);
+  --green-text: #34d399;
+  --coral-glow: rgba(239, 68, 68, 0.14);
+  --coral-border: rgba(239, 68, 68, 0.32);
   --coral-text: #f87171;
 
   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
@@ -30,16 +31,16 @@
 }
 
 body[data-theme="chalk"] {
-  --bg: #f5f7fb;
+  --bg: #f8fafc;
   --surface: #ffffff;
-  --surface-subtle: #edf1f7;
-  --border: rgba(0, 0, 0, 0.08);
-  --border-focus: rgba(0, 0, 0, 0.18);
-  --text: #0b0f19;
-  --text-muted: #626e82;
+  --surface-subtle: #f1f5f9;
+  --border: rgba(15, 23, 42, 0.08);
+  --border-focus: rgba(15, 23, 42, 0.2);
+  --text: #0f172a;
+  --text-muted: #64748b;
   --text-dim: #94a3b8;
-  --soft-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.06);
-  --green-text: #16a34a;
+  --soft-shadow: 0 20px 48px -10px rgba(15, 23, 42, 0.08);
+  --green-text: #059669;
   --coral-text: #dc2626;
 }
 
@@ -79,7 +80,7 @@ body {
   pointer-events: none !important;
   z-index: 0;
   filter: blur(65px) saturate(180%);
-  opacity: 0.4;
+  opacity: 0.35;
   display: block;
 }
 
@@ -88,13 +89,13 @@ body {
   inset: 0;
   pointer-events: none !important;
   z-index: 1;
-  background: radial-gradient(circle at center 40%, transparent 45%, rgba(0, 0, 0, 0.2) 100%);
+  background: radial-gradient(circle at center 40%, transparent 45%, rgba(0, 0, 0, 0.3) 100%);
 }
 
 .cinematic-transition-overlay {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(56, 189, 248, 0.25) 0%, rgba(7, 9, 14, 0.92) 75%);
+  background: radial-gradient(circle at center, rgba(56, 189, 248, 0.25) 0%, rgba(7, 9, 14, 0.94) 75%);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
   opacity: 0;
