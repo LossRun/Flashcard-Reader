@@ -1493,3 +1493,50 @@ window.addEventListener("DOMContentLoaded", async () => {
   decks = await fetchAllDecks();
   renderCarousel();
 });
+
+// =========================================================
+// OTA SILENT BACKGROUND SYNC & HOT-UPDATE ENGINE
+// =========================================================
+const CURRENT_APP_VERSION = "1.0.0";
+const REMOTE_VERSION_URL = "https://Flashcard-Reader.surge.sh/version.json?t=" + Date.now();
+const REMOTE_BASE_URL = "https://Flashcard-Reader.surge.sh/";
+const otaModal = document.getElementById("ota-update-modal");
+const otaNewVer = document.getElementById("ota-new-ver");
+const otaBtnLater = document.getElementById("ota-btn-later");
+const otaBtnApply = document.getElementById("ota-btn-apply");
+
+async function checkSilentOTAUpdate() {
+  if (!navigator.onLine || !otaModal) return;
+  try {
+    const res = await fetch(REMOTE_VERSION_URL, { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+    const localVer = localStorage.getItem("fc_installed_ver") || CURRENT_APP_VERSION;
+    if (data.version && data.version !== localVer) {
+      otaNewVer.textContent = "v" + data.version;
+      otaModal.classList.add("open");
+      triggerHaptic(14);
+      otaBtnLater.onclick = () => otaModal.classList.remove("open");
+      otaBtnApply.onclick = async () => {
+        otaBtnApply.textContent = "Updating...";
+        otaBtnApply.disabled = true;
+        try {
+          if ("caches" in window) {
+            const cache = await caches.open("fc-ota-runtime-v1");
+            for (const f of ["index.html", "style.css", "app.js"]) {
+              const fr = await fetch(REMOTE_BASE_URL + f + "?t=" + Date.now(), { cache: "no-store" });
+              if (fr.ok) await cache.put(f, fr);
+            }
+          }
+          localStorage.setItem("fc_installed_ver", data.version);
+          triggerHaptic([20, 50, 20]);
+          window.location.reload(true);
+        } catch(e) {
+          otaModal.classList.remove("open");
+        }
+      };
+    }
+  } catch(e) {}
+}
+window.addEventListener("load", () => setTimeout(checkSilentOTAUpdate, 2500));
+window.addEventListener("online", checkSilentOTAUpdate);
