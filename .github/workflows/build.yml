@@ -1,0 +1,58 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Prepare Cordova assets
+        run: |
+          mkdir -p www
+          cp -r index.html style.css app.js icon.png www/ 2>/dev/null || true
+
+      - name: Build Android APK
+        run: |
+          yes | sdkmanager --licenses || true
+          cordova platform add android --no-telemetry
+          cordova build android --debug --no-telemetry
+          cp platforms/android/app/build/outputs/apk/debug/app-debug.apk Flashcard-Reader.apk
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Flashcard-Reader-apk
+          path: Flashcard-Reader.apk
+
+      - name: Commit and push updated APK to repo
+        continue-on-error: true
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main || true
+          git add Flashcard-Reader.apk
+          git diff --staged --quiet || (git commit -m "Auto-build: update compiled Android APK" && git push origin main)

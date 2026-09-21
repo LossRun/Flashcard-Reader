@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.flashcards.app" version="1.4.6" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Flashcards</name>
+    <description>A minimal offline flashcard app.</description>
+    <author email="support@flashcards.app" href="https://github.com">Flashcards Team</author>
+    
+    <content src="index.html" />
+    
+    <icon src="icon.png" />
+
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    
+    <preference name="Orientation" value="portrait" />
+    <preference name="BackgroundColor" value="#090a0d" />
+</widget>

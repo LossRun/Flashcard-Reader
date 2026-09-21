@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Flashcards</title>
+  
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="app.js"></script>
+</head>
+<body>
+
+  <!-- Fluid Ambient Lighting Canvas -->
+  <canvas id="fluid-canvas"></canvas>
+  <div class="viewport-overlay"></div>
+
+  <!-- Cinematic Transition Layer -->
+  <div class="cinematic-transition-overlay" id="cinematic-overlay"></div>
+
+  <!-- Notification Banner -->
+  <div class="toast-banner" id="toast-banner">
+    <div class="toast-content">
+      <div class="toast-title" id="toast-title">Notice</div>
+      <div class="toast-message" id="toast-message">Message</div>
+    </div>
+    <button class="toast-close" id="toast-close" type="button">✕</button>
+  </div>
+
+  <!-- Top Bar -->
+  <div class="top-zone">
+    <header>
+      <div class="header-left-group">
+        <div class="brand-logo-pill" id="btn-home-nav" title="Library">
+          <img src="icon.png" alt="Logo" class="brand-logo-img" onerror="this.style.display='none'">
+        </div>
+        <span class="counter-mono" id="counter">Deck Vault</span>
+        <div class="score-stats hidden" id="score-stats">
+          <span class="score-badge badge-wrong" id="wrong-badge">✕ <span id="wrong-count">0</span></span>
+          <span class="score-badge badge-correct" id="right-badge">✓ <span id="right-count">0</span></span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="glass-btn hidden" id="change-deck-btn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+          </svg>
+          <span>Decks</span>
+        </button>
+        <button class="glass-btn" id="open-prefs" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="mastery-progress-track">
+      <div class="mastery-progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <main>
+    <input type="file" id="file-input" style="display: none;" accept=".csv,text/csv,text/plain" />
+    <input type="file" id="cover-file-input" style="display: none;" accept="image/png,image/jpeg,image/webp" />
+    <input type="file" id="edit-cover-file-input" style="display: none;" accept="image/png,image/jpeg,image/webp" />
+
+    <!-- 3D Clamped Deck Carousel Viewport -->
+    <div class="library-viewport" id="library-viewport">
+      <div class="carousel-stage" id="carousel-stage"></div>
+      <div class="carousel-nav-dots" id="carousel-dots"></div>
+    </div>
+
+    <!-- Active Study Environment -->
+    <div class="card-scene hidden" id="card-scene">
+      <div class="stack-layer stack-layer-2" id="stack-layer-2"></div>
+      <div class="stack-layer stack-layer-1" id="stack-layer-1"></div>
+
+      <div class="swipe-backlight" id="swipe-backlight"></div>
+
+      <div class="swipe-badge swipe-badge-right" id="badge-right-overlay">✓ Got It</div>
+      <div class="swipe-badge swipe-badge-left" id="badge-left-overlay">✕ Needs Work</div>
+
+      <div class="card" id="card">
+        <div class="card-face card-front" id="card-front">
+          <div class="card-top-bar">
+            <!-- Question Light Indicator Tag -->
+            <span class="meta-tag tag-prompt" style="background: rgba(251, 191, 36, 0.1); border: 1.5px solid rgba(251, 191, 36, 0.35); color: #fbbf24;">
+              <span class="indicator-dot" style="background:#fbbf24; box-shadow:0 0 10px #fbbf24;"></span> QUESTION
+            </span>
+          </div>
+          <div class="card-text" id="q-text"></div>
+          <span class="bottom-hint">Tap to flip &middot; Pull sideways to rate</span>
+        </div>
+
+        <div class="card-face card-back" id="card-back">
+          <div class="card-top-bar">
+            <!-- Answer Light Indicator Tag -->
+            <span class="meta-tag tag-answer" style="background: rgba(52, 211, 153, 0.1); border: 1.5px solid rgba(52, 211, 153, 0.35); color: #34d399;">
+              <span class="indicator-dot" style="background:#34d399; box-shadow:0 0 10px #34d399;"></span> ANSWER
+            </span>
+          </div>
+          <div class="card-text" id="a-text"></div>
+          <span class="bottom-hint">Tap to flip &middot; Pull sideways to rate</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Report -->
+    <div class="report-card hidden" id="report-card">
+      <div class="report-header">
+        <div class="report-title">Session Complete</div>
+        <div class="report-sub">Performance Breakdown</div>
+      </div>
+
+      <div class="report-ring-container">
+        <svg class="report-ring-svg" viewBox="0 0 140 140">
+          <circle class="ring-track" cx="70" cy="70" r="58"></circle>
+          <circle class="ring-fill" id="ring-fill" cx="70" cy="70" r="58"></circle>
+        </svg>
+        <div class="ring-center-content">
+          <span class="ring-pct" id="report-accuracy-num">0%</span>
+          <span class="ring-sub" id="report-ratio">0 / 0</span>
+        </div>
+      </div>
+
+      <div class="report-stats-grid">
+        <div class="report-stat-box">
+          <span class="report-stat-label">Mastered</span>
+          <span class="report-stat-num stat-right" id="report-right">0</span>
+        </div>
+        <div class="report-stat-box">
+          <span class="report-stat-label">Needs Review</span>
+          <span class="report-stat-num stat-wrong" id="report-wrong">0</span>
+        </div>
+      </div>
+
+      <div class="report-actions">
+        <div class="report-actions-row">
+          <button class="report-action-btn report-btn-restart" id="btn-restart-deck" type="button">Restart</button>
+          <button class="report-action-btn report-btn-missed" id="btn-review-missed" type="button">Study Missed</button>
+        </div>
+        <button class="report-action-btn report-btn-share" id="btn-export-image" type="button">
+          Export Report
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div class="dock-container">
+    <div class="dock hidden" id="dock">
+      <div class="action-row">
+        <button class="dock-btn btn-review-wrong" id="btn-wrong" type="button">✕ Needs Work</button>
+        <button class="dock-btn btn-review-right" id="btn-right" type="button">✓ Got It</button>
+      </div>
+      <div class="utility-row">
+        <button class="dock-btn btn-secondary" id="prev-btn" type="button">← Prev</button>
+        <button class="dock-btn btn-secondary" id="shuffle-btn" type="button">Shuffle</button>
+        <button class="dock-btn btn-secondary" id="next-btn" type="button">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create New Deck Sheet -->
+  <div class="modal-overlay" id="create-modal">
+    <div class="settings-sheet" id="create-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div class="sheet-title">New Study Deck</div>
+        <button class="glass-btn" id="close-create" type="button">✕</button>
+      </div>
+
+      <div class="pref-block">
+        <span class="pref-label">Deck Title</span>
+        <input type="text" class="glass-text-input" id="new-deck-title" placeholder="e.g. Molecular Biology" maxlength="32" />
+      </div>
+
+      <div class="pref-block">
+        <span class="pref-label">Cover Artwork (Optional)</span>
+        <label class="upload-field-btn" for="cover-file-input">
+          <span id="selected-cover-label">Select Cover Image...</span>
+        </label>
+      </div>
+
+      <div class="pref-block">
+        <span class="pref-label">Flashcards CSV</span>
+        <label class="upload-field-btn" for="file-input">
+          <span id="selected-file-label">Choose CSV File...</span>
+        </label>
+      </div>
+
+      <button class="sheet-main-btn" id="btn-save-new-deck" style="margin-top: 14px;" type="button">
+        Add to Vault
+      </button>
+    </div>
+  </div>
+
+  <!-- Edit Deck Sheet -->
+  <div class="modal-overlay" id="edit-deck-modal">
+    <div class="settings-sheet" id="edit-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div class="sheet-title">Edit Deck Properties</div>
+        <button class="glass-btn" id="close-edit" type="button">✕</button>
+      </div>
+
+      <div class="pref-block">
+        <span class="pref-label">Deck Title</span>
+        <input type="text" class="glass-text-input" id="edit-deck-title" maxlength="32" />
+      </div>
+
+      <div class="pref-block">
+        <span class="pref-label">Cover Artwork</span>
+        <label class="upload-field-btn" for="edit-cover-file-input">
+          <span id="edit-selected-cover-label">Change Cover Image...</span>
+        </label>
+      </div>
+
+      <div class="inspect-actions" style="margin-top: 24px; display: flex; flex-direction: column; gap: 14px;">
+        <button class="sheet-main-btn" id="btn-save-edit-deck" type="button">Save Changes</button>
+        <button class="sheet-sub-btn btn-danger" id="btn-edit-delete-trigger" type="button" style="color: #f87171; border-color: rgba(239, 68, 68, 0.3); margin-top: 6px;">Delete Deck</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About / Info Modal -->
+  <div class="modal-overlay" id="info-modal">
+    <div class="settings-sheet" id="info-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div class="sheet-title">About & Credits</div>
+        <button class="glass-btn" id="close-info" type="button">✕</button>
+      </div>
+
+      <div class="pref-block" style="text-align: center; margin: 10px 0 20px 0;">
+        <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 2.2rem; font-style: italic; color: var(--text);">Flashcard Reader</div>
+        <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; letter-spacing: 0.05em;">Designed & Developed by <span style="color: #38bdf8; font-weight: 700;">LossRun</span></div>
+      </div>
+
+      <div class="info-links-stack" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px;">
+        <a href="https://github.com/LossRun/Flashcard-Reader.git" target="_blank" class="info-link-tile">
+          <div class="info-tile-icon" style="background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.15); color: #f8fafc;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          </div>
+          <div class="info-tile-text">
+            <span class="info-tile-title">GitHub Repository</span>
+            <span class="info-tile-sub">LossRun/Flashcard-Reader</span>
+          </div>
+        </a>
+
+        <a href="mailto:LossRun.Official@gmail.com" class="info-link-tile">
+          <div class="info-tile-icon" style="background: rgba(234, 67, 53, 0.1); border-color: rgba(234, 67, 53, 0.25);">
+            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 12.75l-9.75-6.5A2 2 0 0 1 4 5h16a2 2 0 0 1 1.75 1.25L12 12.75z"/><path fill="#4285F4" d="M2.25 7.5V18a2 2 0 0 0 2 2h2.5V11L2.25 7.5z"/><path fill="#FBBC05" d="M21.75 7.5L17.25 11v9H19.75a2 2 0 0 0 2-2V7.5z"/><path fill="#34A853" d="M7.25 11v9h9.5V11L12 14.5 7.25 11z"/></svg>
+          </div>
+          <div class="info-tile-text">
+            <span class="info-tile-title">Official Email</span>
+            <span class="info-tile-sub">LossRun.Official@gmail.com</span>
+          </div>
+        </a>
+
+        <a href="https://Flashcard-Reader.surge.sh" target="_blank" class="info-link-tile">
+          <div class="info-tile-icon" style="padding: 0; overflow: hidden; background: transparent; border-color: rgba(56, 189, 248, 0.3);">
+            <img src="icon.png" alt="Website Logo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'" />
+          </div>
+          <div class="info-tile-text">
+            <span class="info-tile-title">Live Website</span>
+            <span class="info-tile-sub">Flashcard-Reader.surge.sh</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" id="delete-confirm-modal">
+    <div class="settings-sheet delete-sheet" id="delete-sheet-content">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" style="margin-bottom: 6px;">Delete Deck</div>
+      <p class="delete-warning-text" id="delete-deck-name">Are you sure you want to permanently delete this deck?</p>
+      <div class="inspect-actions" style="margin-top: 18px;">
+        <button class="sheet-main-btn btn-danger" id="btn-confirm-delete" type="button">Delete</button>
+        <button class="sheet-sub-btn" id="btn-cancel-delete" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Database Confirmation Modal -->
+  <div class="modal-overlay" id="reset-confirm-modal">
+    <div class="settings-sheet delete-sheet" id="reset-sheet-content">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" style="margin-bottom: 6px;">Reset Local Database?</div>
+      <p class="delete-warning-text">This will permanently erase all local decks, progress history, and restore factory defaults.</p>
+      <div class="inspect-actions" style="margin-top: 18px;">
+        <button class="sheet-main-btn btn-danger" id="btn-confirm-reset" type="button">Reset Everything</button>
+        <button class="sheet-sub-btn" id="btn-cancel-reset" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preferences & Ambient Engine Modal -->
+  <div class="modal-overlay" id="prefs-modal">
+    <div class="settings-sheet" id="settings-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div class="sheet-title">Preferences</div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button class="glass-btn" id="open-info-modal" title="About & Credits" type="button" style="width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: 50%;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          </button>
+          <button class="glass-btn" id="close-prefs" type="button">✕</button>
+        </div>
+      </div>
+
+      <div class="pref-block">
+        <span class="pref-label">Fluid Ambient Lighting</span>
+        <div class="btn-tile-grid grid-2" id="anim-state-grid">
+          <button class="pref-tile-btn active" data-val="off" type="button">Off</button>
+          <button class="pref-tile-btn" data-val="on" type="button">On</button>
+        </div>
+      </div>
+
+      <div class="accordion-stage" id="accordion-stage">
+        <div class="accordion-inner">
+          <div class="accordion-card">
+            <div class="pref-block" style="margin-bottom: 0;">
+              <span class="pref-label">Flow Velocity</span>
+              <div class="slider-wrap">
+                <input type="range" class="glass-slider" id="speed-slider" min="0.002" max="0.020" step="0.001" value="0.006" />
+                <span class="slider-val" id="speed-val">0.006</span>
+              </div>
+            </div>
+
+            <div class="pref-block" style="margin-bottom: 0;">
+              <span class="pref-label">Lighting Intensity</span>
+              <div class="slider-wrap">
+                <input type="range" class="glass-slider" id="intensity-slider" min="0.2" max="0.9" step="0.05" value="0.55" />
+                <span class="slider-val" id="intensity-val">55%</span>
+              </div>
+            </div>
+
+            <div class="pref-block" style="margin-bottom: 0;">
+              <span class="pref-label">Color Presets</span>
+              <div class="btn-tile-grid grid-2" id="palette-grid">
+                <button class="pref-tile-btn active" data-c1="#1d4ed8" data-c2="#059669" data-c3="#d97706" type="button">Aura</button>
+                <button class="pref-tile-btn" data-c1="#ec4899" data-c2="#06b6d4" data-c3="#8b5cf6" type="button">Neon</button>
+                <button class="pref-tile-btn" data-c1="#059669" data-c2="#0d9488" data-c3="#84cc16" type="button">Emerald</button>
+                <button class="pref-tile-btn" data-c1="#e11d48" data-c2="#f97316" data-c3="#eab308" type="button">Sunset</button>
+              </div>
+            </div>
+
+            <div class="pref-block" style="margin-bottom: 0;">
+              <span class="pref-label">Custom Lighting Nodes</span>
+              <div class="color-pickers-row">
+                <div class="picker-slot">
+                  <span>Node 1</span>
+                  <input type="color" class="custom-color-input" id="custom-c1" value="#1d4ed8" />
+                </div>
+                <div class="picker-slot">
+                  <span>Node 2</span>
+                  <input type="color" class="custom-color-input" id="custom-c2" value="#059669" />
+                </div>
+                <div class="picker-slot">
+                  <span>Node 3</span>
+                  <input type="color" class="custom-color-input" id="custom-c3" value="#d97706" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pref-block">
+        <span class="pref-label">Theme</span>
+        <div class="btn-tile-grid" id="theme-grid">
+          <button class="pref-tile-btn active" data-val="auto" type="button">Auto</button>
+          <button class="pref-tile-btn" data-val="dark" type="button">Dark</button>
+          <button class="pref-tile-btn" data-val="chalk" type="button">Light</button>
+        </div>
+      </div>
+
+      <div class="pref-block">
+        <span class="pref-label">Card Font Scale</span>
+        <div class="slider-wrap">
+          <input type="range" class="glass-slider" id="font-slider" min="1.3" max="2.0" step="0.05" value="1.62" />
+          <span class="slider-val" id="font-val">1.62rem</span>
+        </div>
+      </div>
+
+      <!-- Danger Zone Database Reset Option -->
+      <div class="pref-block" style="margin-top: 18px; border-top: 1px solid var(--border); padding-top: 16px;">
+        <span class="pref-label" style="color: #f87171;">Danger Zone</span>
+        <button class="sheet-sub-btn btn-danger" id="btn-open-reset-modal" type="button" style="color: #f87171; border-color: rgba(239, 68, 68, 0.3);">Reset Local Database & Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Export Modal -->
+  <div class="save-modal-backdrop" id="save-modal-backdrop">
+    <div class="save-modal-card" id="save-modal-card-content">
+      <img id="save-modal-img" class="save-modal-img" alt="Report Preview" />
+      <div class="save-modal-actions">
+        <button class="sheet-sub-btn" id="save-modal-close" type="button">Close</button>
+        <button class="sheet-main-btn" id="save-modal-download" type="button">Save Image</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
