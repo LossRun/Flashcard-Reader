@@ -1277,63 +1277,60 @@ document.getElementById("save-modal-close").addEventListener("click", () => {
 // =========================================================
 document.getElementById("save-modal-download").addEventListener("click", async () => {
   triggerHaptic(15);
-  if (!cachedReportDataUrl && !cachedReportBlob) return;
-  const filename = `Flashcard-Report-${Date.now()}.png`;
+  if (!cachedReportBlob && !cachedReportDataUrl) return;
+  const filename = "Flashcard-Report-" + Date.now() + ".png";
 
-  // 1. Android/iOS Native Web Share API (Works in modern mobile browsers and WebView)
+  // 1. Android Native System Share / Save Dialog (Native APK + Mobile Browser)
   if (navigator.canShare && cachedReportBlob) {
     try {
       const file = new File([cachedReportBlob], filename, { type: "image/png" });
       if (navigator.canShare({ files: [file] })) {
         await navigator.share({
+          files: [file],
           title: "Session Report",
-          text: "My Flashcards Study Session Report",
-          files: [file]
+          text: "Flashcard Study Report"
         });
+        showToast("Report Saved", "Shared or saved successfully!", false);
         return;
       }
-    } catch (e) {
-      console.log("Share failed, falling back to download...", e);
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        console.warn("Share failed, falling back to download:", err);
+      } else {
+        return;
+      }
     }
   }
 
-  // 2. Cordova / PhoneGap Native File System APK Support
+  // 2. Cordova Native FileSystem Plugin (if packaged with cordova-plugin-file)
   if (window.cordova && window.resolveLocalFileSystemURL && cachedReportBlob) {
     try {
-      const storageLocation = cordova.file.externalRootDirectory || cordova.file.dataDirectory;
-      window.resolveLocalFileSystemURL(storageLocation, (dirEntry) => {
+      const targetDir = cordova.file.externalRootDirectory || cordova.file.dataDirectory;
+      window.resolveLocalFileSystemURL(targetDir, (dirEntry) => {
         dirEntry.getFile(filename, { create: true, exclusive: false }, (fileEntry) => {
           fileEntry.createWriter((fileWriter) => {
             fileWriter.onwriteend = () => {
-              showToast("Report Saved", "Saved report to device storage!", false);
-              if (window.cordova.plugins && window.cordova.plugins.MediaScannerPlugin) {
-                window.cordova.plugins.MediaScannerPlugin.scanFile(fileEntry.nativeURL);
-              }
-            };
-            fileWriter.onerror = (err) => {
-              showToast("Save Error", "Could not write image to local storage.");
+              showToast("Report Saved", "Saved to device storage!", false);
             };
             fileWriter.write(cachedReportBlob);
           });
         });
       });
       return;
-    } catch (err) {
-      console.error("Cordova File API fallback triggered:", err);
-    }
+    } catch (e) {}
   }
 
-  // 3. Fallback standard Anchor Data-URL Click
+  // 3. Web Anchor Download Fallback
   try {
     const a = document.createElement("a");
     a.href = cachedReportDataUrl;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => { document.body.removeChild(a); }, 300);
-    showToast("Report Downloaded", "Image saved to downloads.", false);
-  } catch (err) {
-    // 4. Ultimate Fallback: Open in new tab/window for manual long-press save
+    setTimeout(() => document.body.removeChild(a), 400);
+    showToast("Downloaded", "Image downloaded to device.", false);
+  } catch (e) {
+    // 4. Ultimate Fallback: Open raw base64 so user can long-press to save
     window.open(cachedReportDataUrl, "_blank");
   }
 });
