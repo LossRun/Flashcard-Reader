@@ -327,12 +327,12 @@
       <div class="pref-block">
         <span class="pref-label">Fluid Ambient Lighting</span>
         <div class="btn-tile-grid grid-2" id="anim-state-grid">
-          <button class="pref-tile-btn active" data-val="off" type="button">Off</button>
-          <button class="pref-tile-btn" data-val="on" type="button">On</button>
+          <button class="pref-tile-btn" data-val="off" type="button">Off</button>
+          <button class="pref-tile-btn active" data-val="on" type="button">On</button>
         </div>
       </div>
 
-      <div class="accordion-stage" id="accordion-stage">
+      <div class="accordion-stage is-open" id="accordion-stage">
         <div class="accordion-inner">
           <div class="accordion-card">
             <div class="pref-block" style="margin-bottom: 0;">
@@ -346,18 +346,18 @@
             <div class="pref-block" style="margin-bottom: 0;">
               <span class="pref-label">Lighting Intensity</span>
               <div class="slider-wrap">
-                <input type="range" class="glass-slider" id="intensity-slider" min="0.2" max="0.9" step="0.05" value="0.55" />
-                <span class="slider-val" id="intensity-val">55%</span>
+                <input type="range" class="glass-slider" id="intensity-slider" min="0.2" max="0.9" step="0.05" value="0.90" />
+                <span class="slider-val" id="intensity-val">90%</span>
               </div>
             </div>
 
             <div class="pref-block" style="margin-bottom: 0;">
               <span class="pref-label">Color Presets</span>
               <div class="btn-tile-grid grid-2" id="palette-grid">
-                <button class="pref-tile-btn active" data-c1="#1d4ed8" data-c2="#059669" data-c3="#d97706" type="button">Aura</button>
+                <button class="pref-tile-btn" data-c1="#1d4ed8" data-c2="#059669" data-c3="#d97706" type="button">Aura</button>
                 <button class="pref-tile-btn" data-c1="#ec4899" data-c2="#06b6d4" data-c3="#8b5cf6" type="button">Neon</button>
                 <button class="pref-tile-btn" data-c1="#059669" data-c2="#0d9488" data-c3="#84cc16" type="button">Emerald</button>
-                <button class="pref-tile-btn" data-c1="#e11d48" data-c2="#f97316" data-c3="#eab308" type="button">Sunset</button>
+                <button class="pref-tile-btn active" data-c1="#e11d48" data-c2="#f97316" data-c3="#eab308" type="button">Sunset</button>
               </div>
             </div>
 
@@ -366,15 +366,15 @@
               <div class="color-pickers-row">
                 <div class="picker-slot">
                   <span>Node 1</span>
-                  <input type="color" class="custom-color-input" id="custom-c1" value="#1d4ed8" />
+                  <input type="color" class="custom-color-input" id="custom-c1" value="#e11d48" />
                 </div>
                 <div class="picker-slot">
                   <span>Node 2</span>
-                  <input type="color" class="custom-color-input" id="custom-c2" value="#059669" />
+                  <input type="color" class="custom-color-input" id="custom-c2" value="#f97316" />
                 </div>
                 <div class="picker-slot">
                   <span>Node 3</span>
-                  <input type="color" class="custom-color-input" id="custom-c3" value="#d97706" />
+                  <input type="color" class="custom-color-input" id="custom-c3" value="#eab308" />
                 </div>
               </div>
             </div>

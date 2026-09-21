@@ -145,14 +145,14 @@ function triggerHaptic(type = 10) {
 // AMBIENT FLUID LIGHTING ENGINE
 const canvas = document.getElementById("fluid-canvas");
 const ctx = canvas.getContext("2d");
-let animRunning = false;
+let animRunning = true;
 let animSpeed = 0.006;
-let animIntensity = 0.55;
+let animIntensity = 0.90;
 let time = 0;
 
-let c1 = { r: 29, g: 78, b: 216 };
-let c2 = { r: 5, g: 150, b: 105 };
-let c3 = { r: 217, g: 119, b: 6 };
+let c1 = { r: 225, g: 29, b: 72 };
+let c2 = { r: 249, g: 115, b: 22 };
+let c3 = { r: 234, g: 179, b: 8 };
 
 function hexToRgb(hex) {
   const bigint = parseInt(hex.replace("#", ""), 16);
@@ -1499,7 +1499,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     fontSlider.value = parseFloat(savedFontSize);
   }
 
-  const savedAnim = localStorage.getItem("fc_anim");
+  const savedAnim = localStorage.getItem("fc_anim") || "on";
   if (savedAnim === "on") {
     animRunning = true;
     canvas.style.display = "block";
@@ -1510,7 +1510,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     renderFluid();
   }
 
-  const savedColors = localStorage.getItem("fc_colors");
+  const savedColors = localStorage.getItem("fc_colors") || JSON.stringify({ c1: "#e11d48", c2: "#f97316", c3: "#eab308" });
   if (savedColors) {
     try {
       const parsed = JSON.parse(savedColors);
